@@ -1,0 +1,140 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#d9d9d9;
+    padding:10px;
+}
+
+.receipt-container{
+    width:100%;
+    max-width:1200px;
+    margin:auto;
+    background:white;
+    border:2px solid black;
+}
+
+.title-box{
+    background:yellow;
+    text-align:center;
+    padding:10px;
+    border-bottom:2px solid black;
+}
+
+.title-box h1{
+    font-size:55px;
+    font-style:italic;
+}
+
+.info-table,
+#receiptTable{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.info-table td,
+#receiptTable th,
+#receiptTable td{
+    border:1px solid black;
+    padding:4px;
+}
+
+.label{
+    background:#c69c6d;
+    font-weight:bold;
+    width:90px;
+    text-align:center;
+}
+
+.empty-box{
+    background:#f2f2f2;
+}
+
+input{
+    width:100%;
+    border:none;
+    outline:none;
+    padding:5px;
+    background:transparent;
+}
+
+#receiptTable th{
+    background:#c69c6d;
+    height:40px;
+}
+
+#receiptTable td{
+    height:32px;
+}
+
+#receiptTable tbody tr td:first-child{
+    text-align:center;
+    width:60px;
+}
+
+.qty,
+.price{
+    text-align:center;
+}
+
+.total{
+    text-align:center;
+    font-weight:bold;
+}
+
+.grand-text{
+    text-align:right;
+    font-size:25px;
+    padding-right:20px;
+}
+
+#grandTotal{
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.buttons{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    padding:20px;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    background:#1f4e79;
+    color:white;
+    cursor:pointer;
+    border-radius:6px;
+    font-size:16px;
+}
+
+button:hover{
+    opacity:0.8;
+}
+
+@media(max-width:768px){
+
+    .title-box h1{
+        font-size:32px;
+    }
+
+    #receiptTable,
+    .info-table{
+        font-size:12px;
+    }
+
+    button{
+        width:100%;
+    }
+
+    .buttons{
+        flex-direction:column;
+    }
+}
