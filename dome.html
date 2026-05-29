@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sri Sawdammal Infra</title>
+  <link rel="stylesheet" href="domo.css" />
+</head>
+<body>
+
+<div class="receipt-container">
+
+  <!-- Header -->
+  <div class="title-box">
+    <h1>Sri Sawdammal Infra</h1>
+  </div>
+
+  <!-- Top Details -->
+  <table class="info-table">
+
+    <tr>
+      <td class="label">From :</td>
+      <td><input type="text"></td>
+
+      <td rowspan="4" class="empty-box"></td>
+
+      <td class="label">Place :</td>
+      <td><input type="text" value="Kendaigoundanur"></td>
+    </tr>
+
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><input type="text" value="Sullerumbu"></td>
+    </tr>
+
+    <tr>
+      <td class="label">To :</td>
+      <td><input type="text"></td>
+      <td></td>
+      <td><input type="text" value="Dindigul"></td>
+    </tr>
+
+    <tr>
+      <td></td>
+      <td></td>
+      <td class="label">Cell No :</td>
+      <td>
+        <input type="text" value="790469983"> <br>
+        <input type="text" value="6369477188">
+      </td>
+    </tr>
+
+  </table>
+
+
+  <!-- Main Table -->
+  <table id="receiptTable">
+
+    <thead>
+      <tr>
+        <th>NO</th>
+        <th>Material</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+        <td>1</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>2</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>3</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>4</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>5</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>6</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>7</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>8</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>9</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+      <tr>
+        <td>10</td>
+        <td><input type="text"></td>
+        <td><input type="number" class="qty" value="0"></td>
+        <td><input type="number" class="price" value="0"></td>
+        <td class="total">0</td>
+      </tr>
+
+    </tbody>
+
+    <tfoot>
+      <tr>
+        <td colspan="4" class="grand-text">Total</td>
+        <td id="grandTotal">0</td>
+      </tr>
+    </tfoot>
+
+  </table>
+
+
+  <!-- Buttons -->
+  <div class="buttons">
+    <button id="addRowBtn">Add Row</button>
+    <button id="shareBtn">Share</button>
+    <button onclick="window.print()">Print</button>
+  </div>
+
+</div>
+
+<script src="dome.js"></script>
+</body>
+</html>
