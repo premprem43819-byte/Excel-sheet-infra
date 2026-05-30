@@ -62,6 +62,10 @@ addRowBtn.addEventListener("click", () => {
         <td>${rowCount}</td>
 
         <td>
+            <input type="text" >
+        </td>
+
+        <td>
             <input type="text" placeholder="Material">
         </td>
 
