@@ -66,15 +66,15 @@ addRowBtn.addEventListener("click", () => {
         </td>
 
         <td>
-            <input type="text" placeholder="Material">
+            <input type="text" >
         </td>
 
         <td>
-            <input type="number" class="qty" value="0">
+            <input type="number" class="qty" value="">
         </td>
 
         <td>
-            <input type="number" class="price" value="0">
+            <input type="number" class="price" value="">
         </td>
 
         <td class="total">0.00</td>
