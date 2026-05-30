@@ -6,11 +6,6 @@ const grandTotal = document.getElementById("grandTotal");
 
 const shareBtn = document.getElementById("shareBtn");
 
-
-// =========================
-// UPDATE TOTALS
-// =========================
-
 function updateTotals() {
 
     let grand = 0;
@@ -19,34 +14,24 @@ function updateTotals() {
 
     rows.forEach((row, index) => {
 
-        // Row Number
         row.cells[0].innerText = index + 1;
 
-        // Qty and Price
         const qtyInput = row.querySelector(".qty");
         const priceInput = row.querySelector(".price");
 
         const qty = Number(qtyInput.value) || 0;
         const price = Number(priceInput.value) || 0;
 
-        // Calculate total
         const total = qty * price;
 
-        // Show total
         row.querySelector(".total").innerText = total.toFixed(2);
 
-        // Add grand total
         grand += total;
     });
 
-    // Show grand total
     grandTotal.innerText = grand.toFixed(2);
 }
 
-
-// =========================
-// INPUT EVENTS
-// =========================
 
 function addEvents() {
 
@@ -65,10 +50,6 @@ function addEvents() {
     });
 }
 
-
-// =========================
-// ADD ROW
-// =========================
 
 addRowBtn.addEventListener("click", () => {
 
@@ -103,10 +84,6 @@ addRowBtn.addEventListener("click", () => {
 });
 
 
-// =========================
-// SHARE BUTTON
-// =========================
-
 shareBtn.addEventListener("click", async () => {
 
     const text =
@@ -134,10 +111,6 @@ shareBtn.addEventListener("click", async () => {
     }
 });
 
-
-// =========================
-// START
-// =========================
 
 addEvents();
 
