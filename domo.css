@@ -4,7 +4,8 @@
     box-sizing:border-box;
     font-family:Arial, sans-serif;
 }
-
+#i{
+    text-align: center;}
 body{
     background:#d9d9d9;
     padding:10px;
