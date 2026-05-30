@@ -4,9 +4,7 @@
     box-sizing:border-box;
     font-family:Arial, sans-serif;
 }
-#i{
-    text-align: center;
-}
+
 
 body{
     background:#d9d9d9;
@@ -31,6 +29,9 @@ body{
 .title-box h1{
     font-size:55px;
     font-style:italic;
+}
+#i{
+   text-align:center;
 }
 
 .info-table,
