@@ -10,6 +10,7 @@ body {
   padding: 10px;
 }
 
+/* ── RECEIPT ─────────────────────────────── */
 .receipt-container {
   width: 100%;
   max-width: 1200px;
@@ -21,6 +22,7 @@ body {
 #material-label {
   text-align: center;
   font-weight: bold;
+  font-size: 13px;
 }
 
 .title-box {
@@ -31,7 +33,7 @@ body {
 }
 
 .title-box h1 {
-  font-size: 55px;
+  font-size: clamp(28px, 6vw, 55px);
   font-style: italic;
   color: #000;
 }
@@ -52,41 +54,40 @@ body {
 .label {
   background: #c69c6d;
   font-weight: bold;
-  width: 90px;
+  width: 80px;
   text-align: center;
+  font-size: 13px;
 }
 
 .empty-box {
   background: #f2f2f2;
-  width: 80px;
+  width: 70px;
 }
 
 input {
   width: 100%;
   border: none;
   outline: none;
-  padding: 5px;
+  padding: 4px;
   background: transparent;
   font-size: 13px;
 }
 
 #receiptTable th {
   background: #c69c6d;
-  height: 40px;
+  height: 38px;
+  font-size: 13px;
+  color: #000;
 }
 
 #receiptTable td {
-  height: 32px;
+  height: 30px;
+  font-size: 13px;
 }
 
 #receiptTable tbody tr td:first-child {
   text-align: center;
-  width: 50px;
-}
-
-.qty,
-.price {
-  text-align: center;
+  width: 38px;
 }
 
 .total {
@@ -96,69 +97,146 @@ input {
 
 .grand-text {
   text-align: right;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
-  padding-right: 20px;
+  padding-right: 12px;
 }
 
 #grandTotal {
   text-align: center;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
 }
 
-/* ========================
-   BUTTONS
-======================== */
+/* ── BUTTONS ─────────────────────────────── */
 .buttons {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px;
   flex-wrap: wrap;
 }
 
-button {
-  padding: 12px 22px;
+.btn {
+  padding: 12px 20px;
   border: none;
   background: #1f4e79;
   color: white;
   cursor: pointer;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-width: 120px;
 }
 
-button:hover {
-  opacity: 0.8;
+.btn:active {
+  opacity: 0.7;
 }
 
-/* ========================
-   PRINT — hide buttons
-======================== */
+/* ── SAVE MODAL ──────────────────────────── */
+#saveModal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+
+#saveModal.show {
+  display: flex;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 88%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.modal-box h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #1f4e79;
+}
+
+.modal-box p {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.modal-steps {
+  text-align: left;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modal-steps div {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  line-height: 1.5;
+}
+
+.modal-steps div:last-child {
+  border: none;
+}
+
+.modal-steps span {
+  font-weight: bold;
+  color: #1f4e79;
+  margin-right: 6px;
+}
+
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.mbtn {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mbtn-primary {
+  background: #1f4e79;
+  color: white;
+}
+
+.mbtn-secondary {
+  background: #eee;
+  color: #333;
+}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media (max-width: 600px) {
+  .title-box h1 { font-size: 28px; }
+  #receiptTable, .info-table { font-size: 11px; }
+  .buttons { flex-direction: column; padding: 12px; }
+  .btn { width: 100%; font-size: 16px; padding: 14px; }
+}
+
+/* ── PRINT ───────────────────────────────── */
 @media print {
-  .buttons {
-    display: none !important;
-  }
-}
-
-/* ========================
-   RESPONSIVE
-======================== */
-@media (max-width: 768px) {
-  .title-box h1 {
-    font-size: 32px;
-  }
-
-  #receiptTable,
-  .info-table {
-    font-size: 12px;
-  }
-
-  button {
-    width: 100%;
-  }
-
-  .buttons {
-    flex-direction: column;
-  }
+  body { background: white; padding: 0; }
+  .buttons { display: none !important; }
+  #saveModal { display: none !important; }
+  .receipt-container { border: 2px solid black; max-width: 100%; }
+  input { font-size: 12px; }
+  .title-box h1 { font-size: 40px; }
 }
