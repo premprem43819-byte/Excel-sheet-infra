@@ -1,9 +1,10 @@
-var tbody       = document.getElementById('tbody');
+var tbody        = document.getElementById('tbody');
 var grandTotalEl = document.getElementById('grandTotal');
 
-// ── DETECT DEVICE ────────────────────────────────
+// ── DEVICE DETECTION ─────────────────────────────
 function isIOS()     { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
 function isAndroid() { return /Android/.test(navigator.userAgent); }
+function isMobile()  { return isIOS() || isAndroid(); }
 
 // ── CREATE ROW ───────────────────────────────────
 function makeRow(n) {
@@ -57,7 +58,7 @@ function buildShareText() {
     'Sri Sawdammal Infra',
     'From : ' + from,
     'To   : ' + to,
-    '─────────────────────────────',
+    '─────────────────────────',
     'No | Date | Material | Qty | Price | Total'
   ];
   tbody.querySelectorAll('tr').forEach(function(row) {
@@ -71,70 +72,44 @@ function buildShareText() {
       row.querySelector('.total').innerText
     );
   });
-  lines.push('─────────────────────────────');
+  lines.push('─────────────────────────');
   lines.push('Grand Total : ' + grandTotalEl.innerText);
   return lines.join('\n');
 }
 
 // ── SHARE BUTTON ─────────────────────────────────
-// Works on mobile (Android/iPhone) via Web Share API.
-// Falls back to clipboard on desktop / older browsers.
 document.getElementById('shareBtn').addEventListener('click', function() {
   var text = buildShareText();
-
-  // Web Share API — supported on Android Chrome & iOS Safari (must be HTTPS or file://)
   if (navigator.share) {
-    navigator.share({
-      title : 'Sri Sawdammal Infra Receipt',
-      text  : text
-    }).catch(function(err) {
-      // User cancelled — do nothing
-      if (err.name !== 'AbortError') {
-        fallbackCopy(text);
-      }
-    });
-    return;
+    navigator.share({ title: 'Sri Sawdammal Infra Receipt', text: text })
+      .catch(function(e) { if (e.name !== 'AbortError') fallbackCopy(text); });
+  } else {
+    fallbackCopy(text);
   }
-
-  // Fallback for desktop / unsupported browsers
-  fallbackCopy(text);
 });
 
 function fallbackCopy(text) {
-  // Modern clipboard API
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function() {
       alert('✅ Receipt copied to clipboard!');
-    }).catch(function() {
-      legacyCopy(text);
-    });
-    return;
+    }).catch(function() { legacyCopy(text); });
+  } else {
+    legacyCopy(text);
   }
-  legacyCopy(text);
 }
 
 function legacyCopy(text) {
-  // execCommand fallback for very old browsers / WebViews
   var ta = document.createElement('textarea');
   ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.top      = '0';
-  ta.style.left     = '0';
-  ta.style.opacity  = '0';
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
   document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
-  try {
-    document.execCommand('copy');
-    alert('✅ Receipt copied to clipboard!');
-  } catch (e) {
-    // Last resort: show text so user can copy manually
-    alert(text);
-  }
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); alert('✅ Copied to clipboard!'); }
+  catch(e) { alert(text); }
   document.body.removeChild(ta);
 }
 
-// ── BUILD RECEIPT HTML (for Save) ────────────────
+// ── BUILD FULL RECEIPT HTML ───────────────────────
 function buildReceiptHTML() {
   var iv = [];
   document.querySelectorAll('.info-table input').forEach(function(inp) {
@@ -147,81 +122,89 @@ function buildReceiptHTML() {
     var total = row.querySelector('.total').innerText;
     rowsHTML +=
       '<tr>' +
-      '<td style="text-align:center;border:1px solid black;padding:5px;width:36px;">' + (i+1) + '</td>' +
-      '<td style="border:1px solid black;padding:5px;">'                 + (inp[0].value||'') + '</td>' +
-      '<td style="border:1px solid black;padding:5px;">'                 + (inp[1].value||'') + '</td>' +
-      '<td style="border:1px solid black;padding:5px;text-align:center;">' + (inp[2].value||'') + '</td>' +
-      '<td style="border:1px solid black;padding:5px;text-align:center;">' + (inp[3].value||'') + '</td>' +
-      '<td style="border:1px solid black;padding:5px;text-align:center;font-weight:bold;">' + total + '</td>' +
+      '<td style="text-align:center;border:1px solid #000;padding:5px;width:36px;">' + (i+1) + '</td>' +
+      '<td style="border:1px solid #000;padding:5px;">'                   + (inp[0].value||'') + '</td>' +
+      '<td style="border:1px solid #000;padding:5px;">'                   + (inp[1].value||'') + '</td>' +
+      '<td style="border:1px solid #000;padding:5px;text-align:center;">' + (inp[2].value||'') + '</td>' +
+      '<td style="border:1px solid #000;padding:5px;text-align:center;">' + (inp[3].value||'') + '</td>' +
+      '<td style="border:1px solid #000;padding:5px;text-align:center;font-weight:bold;">' + total + '</td>' +
       '</tr>';
   });
 
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+  return '<!DOCTYPE html><html><head>' +
+    '<meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1.0">' +
-    '<title>Sri Sawdammal Infra - Receipt</title>' +
+    '<title>Sri Sawdammal Infra Receipt</title>' +
     '<style>' +
-    'body{margin:0;padding:10px;background:#d9d9d9;font-family:Arial,sans-serif}' +
-    '.wrap{max-width:900px;margin:auto;background:white;border:2px solid black}' +
-    '.hint{background:#1f4e79;color:white;text-align:center;padding:12px;font-size:14px;font-weight:bold;line-height:1.6}' +
-    '@media print{.hint{display:none!important}body{background:white;padding:0}}' +
-    '</style></head><body>' +
-    '<div class="hint">' +
-      '📥 <b>iPhone:</b> tap Share icon → Save to Files &nbsp;|&nbsp; <b>Android:</b> tap ⋮ menu → Download' +
-    '</div>' +
+      'body{margin:0;padding:8px;background:#d9d9d9;font-family:Arial,sans-serif}' +
+      '.wrap{max-width:900px;margin:auto;background:#fff;border:2px solid #000}' +
+      'table{width:100%;border-collapse:collapse}' +
+      '@media print{body{background:#fff;padding:0}.no-print{display:none!important}}' +
+    '</style>' +
+    '</head><body>' +
     '<div class="wrap">' +
-    '<div style="background:yellow;text-align:center;padding:10px;border-bottom:2px solid black;">' +
-    '<h1 style="font-size:clamp(26px,5vw,42px);font-style:italic;color:#000;">Sri Sawdammal Infra</h1></div>' +
-
-    '<table style="width:100%;border-collapse:collapse;">' +
-    '<tr>' +
-    '<td style="background:#c69c6d;font-weight:bold;width:80px;text-align:center;border:1px solid black;padding:5px;font-size:13px;">From :</td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[0] + '</td>' +
-    '<td rowspan="4" style="background:#f2f2f2;width:60px;border:1px solid black;"></td>' +
-    '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid black;padding:5px;font-size:13px;">Place :</td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[1] + '</td>' +
-    '</tr><tr>' +
-    '<td style="border:1px solid black;padding:5px;"></td>' +
-    '<td style="border:1px solid black;padding:5px;"></td>' +
-    '<td style="border:1px solid black;padding:5px;"></td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[2] + '</td>' +
-    '</tr><tr>' +
-    '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid black;padding:5px;font-size:13px;">To :</td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[3] + '</td>' +
-    '<td style="border:1px solid black;padding:5px;"></td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[4] + '</td>' +
-    '</tr><tr>' +
-    '<td style="border:1px solid black;padding:5px;"></td>' +
-    '<td style="border:1px solid black;padding:5px;text-align:center;font-weight:bold;font-size:13px;">MATERIAL INPUT</td>' +
-    '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid black;padding:5px;font-size:13px;">Cell No :</td>' +
-    '<td style="border:1px solid black;padding:5px;font-size:13px;">'   + iv[5] + '<br>' + (iv[6]||'') + '</td>' +
-    '</tr></table>' +
-
-    '<table style="width:100%;border-collapse:collapse;">' +
-    '<thead><tr>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;width:36px;">NO</th>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;">Date</th>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;">Material</th>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;">Qty</th>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;">Price</th>' +
-    '<th style="background:#c69c6d;border:1px solid black;padding:6px;">Total</th>' +
-    '</tr></thead>' +
-    '<tbody>' + rowsHTML + '</tbody>' +
-    '<tfoot><tr>' +
-    '<td colspan="4" style="text-align:right;font-size:18px;font-weight:bold;padding:8px 12px 8px 0;border:1px solid black;">Total</td>' +
-    '<td colspan="2" style="text-align:center;font-size:18px;font-weight:bold;border:1px solid black;">' + grandTotalEl.innerText + '</td>' +
-    '</tr></tfoot>' +
-    '</table></div></body></html>';
+      '<div style="background:yellow;text-align:center;padding:10px;border-bottom:2px solid #000;">' +
+        '<h1 style="font-size:clamp(24px,5vw,42px);font-style:italic;color:#000;margin:0;">Sri Sawdammal Infra</h1>' +
+      '</div>' +
+      '<table>' +
+        '<tr>' +
+          '<td style="background:#c69c6d;font-weight:bold;width:80px;text-align:center;border:1px solid #000;padding:5px;font-size:13px;">From :</td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[0] + '</td>' +
+          '<td rowspan="4" style="background:#f2f2f2;width:60px;border:1px solid #000;"></td>' +
+          '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:5px;font-size:13px;">Place :</td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[1] + '</td>' +
+        '</tr><tr>' +
+          '<td style="border:1px solid #000;padding:5px;"></td>' +
+          '<td style="border:1px solid #000;padding:5px;"></td>' +
+          '<td style="border:1px solid #000;padding:5px;"></td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[2] + '</td>' +
+        '</tr><tr>' +
+          '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:5px;font-size:13px;">To :</td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[3] + '</td>' +
+          '<td style="border:1px solid #000;padding:5px;"></td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[4] + '</td>' +
+        '</tr><tr>' +
+          '<td style="border:1px solid #000;padding:5px;"></td>' +
+          '<td style="border:1px solid #000;padding:5px;text-align:center;font-weight:bold;font-size:13px;">MATERIAL INPUT</td>' +
+          '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:5px;font-size:13px;">Cell No :</td>' +
+          '<td style="border:1px solid #000;padding:5px;font-size:13px;">' + iv[5] + '<br>' + (iv[6]||'') + '</td>' +
+        '</tr>' +
+      '</table>' +
+      '<table>' +
+        '<thead><tr>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;width:36px;">NO</th>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;">Date</th>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;">Material</th>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;">Qty</th>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;">Price</th>' +
+          '<th style="background:#c69c6d;border:1px solid #000;padding:6px;">Total</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rowsHTML + '</tbody>' +
+        '<tfoot><tr>' +
+          '<td colspan="4" style="text-align:right;font-size:18px;font-weight:bold;padding:8px 12px;border:1px solid #000;">Total</td>' +
+          '<td colspan="2" style="text-align:center;font-size:18px;font-weight:bold;border:1px solid #000;">' + grandTotalEl.innerText + '</td>' +
+        '</tr></tfoot>' +
+      '</table>' +
+    '</div>' +
+    '</body></html>';
 }
 
 // ── SAVE BUTTON ──────────────────────────────────
-document.getElementById('saveBtn').addEventListener('click', function() {
-  var html = buildReceiptHTML();
-  var blob = new Blob([html], { type: 'text/html' });
+// Strategy:
+//   Desktop Chrome/Edge  → showSaveFilePicker (direct save dialog)
+//   Android Chrome       → data: URI with <a download> trick — goes to Downloads folder
+//   iPhone Safari        → open in new tab → user saves via Share → Save to Files
+//   Fallback             → data: URI download
 
-  // Modern desktop Chrome / Edge — File System Access API (direct save dialog)
-  if (window.showSaveFilePicker) {
+document.getElementById('saveBtn').addEventListener('click', function() {
+  var html     = buildReceiptHTML();
+  var filename = 'SriSawdammal_Receipt.html';
+
+  // ── Desktop: File System Access API ──
+  if (window.showSaveFilePicker && !isMobile()) {
+    var blob = new Blob([html], { type: 'text/html' });
     window.showSaveFilePicker({
-      suggestedName : 'SriSawdammal_Receipt.html',
+      suggestedName : filename,
       types: [{ description: 'HTML File', accept: { 'text/html': ['.html'] } }]
     }).then(function(fh) {
       return fh.createWritable();
@@ -230,42 +213,79 @@ document.getElementById('saveBtn').addEventListener('click', function() {
     }).then(function() {
       alert('✅ Receipt saved!');
     }).catch(function(e) {
-      if (e.name !== 'AbortError') showSaveModal(blob);
+      if (e.name !== 'AbortError') downloadViaAnchor(html, filename);
     });
     return;
   }
 
-  // Mobile / older browsers — show step-by-step modal
-  showSaveModal(blob);
+  // ── Android: anchor download — saves directly to Downloads ──
+  if (isAndroid()) {
+    downloadViaAnchor(html, filename);
+    return;
+  }
+
+  // ── iPhone: open in new tab with save instructions banner ──
+  if (isIOS()) {
+    var blob = new Blob([html], { type: 'text/html' });
+    var url  = URL.createObjectURL(blob);
+    showSaveModal(url);
+    return;
+  }
+
+  // ── Other / unknown ──
+  downloadViaAnchor(html, filename);
 });
 
-function showSaveModal(blob) {
-  var url   = URL.createObjectURL(blob);
-  var steps = document.getElementById('modalSteps');
-  var modal = document.getElementById('saveModal');
+// Anchor-based download — works on Android Chrome → saves to Downloads folder
+function downloadViaAnchor(html, filename) {
+  try {
+    // Try data URI first (most compatible on Android)
+    var dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+    var a = document.createElement('a');
+    a.href     = dataUri;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  if (isIOS()) {
-    steps.innerHTML =
-      '<div><span>1.</span> Tap <b>Open Receipt</b> below</div>' +
-      '<div><span>2.</span> Tap the <b>Share icon</b> (box with ↑) at the bottom of Safari</div>' +
-      '<div><span>3.</span> Tap <b>Save to Files</b> → choose a folder → tap <b>Save</b></div>';
-  } else if (isAndroid()) {
-    steps.innerHTML =
-      '<div><span>1.</span> Tap <b>Open Receipt</b> below</div>' +
-      '<div><span>2.</span> Tap the <b>⋮ menu</b> at the top-right of Chrome</div>' +
-      '<div><span>3.</span> Tap <b>Download</b> to save to your phone</div>';
-  } else {
-    steps.innerHTML =
-      '<div><span>1.</span> Tap <b>Open Receipt</b> below</div>' +
-      '<div><span>2.</span> Use your browser menu to <b>Save / Download</b> the page</div>';
+    // Show confirmation after short delay
+    setTimeout(function() {
+      alert('✅ Receipt saved!\nCheck your Downloads folder.');
+    }, 800);
+  } catch(e) {
+    // Blob URL fallback
+    var blob = new Blob([html], { type: 'text/html' });
+    var url  = URL.createObjectURL(blob);
+    var a2   = document.createElement('a');
+    a2.href     = url;
+    a2.download = filename;
+    a2.style.display = 'none';
+    document.body.appendChild(a2);
+    a2.click();
+    document.body.removeChild(a2);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+    setTimeout(function() { alert('✅ Receipt saved!\nCheck your Downloads folder.'); }, 800);
   }
+}
+
+// iOS modal — open in new tab, user does Share → Save to Files
+function showSaveModal(url) {
+  var modal = document.getElementById('saveModal');
+  var steps = document.getElementById('modalSteps');
+
+  steps.innerHTML =
+    '<div><span>1.</span> Tap <b>Open Receipt</b> below</div>' +
+    '<div><span>2.</span> Tap the <b>Share icon</b> <span style="font-size:15px;">⬆</span> at the bottom of Safari</div>' +
+    '<div><span>3.</span> Scroll down and tap <b>Save to Files</b></div>' +
+    '<div><span>4.</span> Choose a folder and tap <b>Save</b></div>';
 
   modal.classList.add('show');
 
   document.getElementById('modalOpenBtn').onclick = function() {
     window.open(url, '_blank');
     modal.classList.remove('show');
-    setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
   };
 
   document.getElementById('modalCloseBtn').onclick = function() {
@@ -274,9 +294,33 @@ function showSaveModal(blob) {
   };
 }
 
-// ── PRINT ────────────────────────────────────────
+// ── PRINT BUTTON ─────────────────────────────────
+// On mobile, we open the receipt HTML in a new window and print from there.
+// This avoids the common issue where window.print() on mobile ignores @media print
+// or doesn't trigger at all on Samsung Browser / older WebViews.
+
 document.getElementById('printBtn').addEventListener('click', function() {
-  setTimeout(function() { window.print(); }, 100);
+  if (isMobile()) {
+    // Open receipt page in new tab — user taps browser Print from the menu
+    // OR we auto-trigger print in the new window
+    var html = buildReceiptHTML();
+    // Inject auto-print script into the receipt HTML
+    var printHTML = html.replace(
+      '</body>',
+      '<script>window.onload=function(){setTimeout(function(){window.print();},400);}<\/script></body>'
+    );
+    var blob = new Blob([printHTML], { type: 'text/html' });
+    var url  = URL.createObjectURL(blob);
+    var win  = window.open(url, '_blank');
+    // If popup blocked, fallback to same-window print
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      setTimeout(function() { window.print(); }, 150);
+    }
+    setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+  } else {
+    // Desktop — standard print
+    setTimeout(function() { window.print(); }, 100);
+  }
 });
 
 // ── INIT ─────────────────────────────────────────
