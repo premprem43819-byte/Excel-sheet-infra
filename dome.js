@@ -1,153 +1,285 @@
-var tbody        = document.getElementById('tbody');
+var tbody = document.getElementById('tbody');
 var grandTotalEl = document.getElementById('grandTotal');
+var toastEl = document.getElementById('toast');
+var statItems = document.getElementById('statItems');
+var statQty = document.getElementById('statQty');
+var statSubtotal = document.getElementById('statSubtotal');
+
+// ── DATE DISPLAY ───────────────────────────────
+document.getElementById('today').textContent = 'Date: ' + new Date().toLocaleDateString('en-IN');
+
+// ── THEME ────────────────────────────────────────
+var currentTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', currentTheme);
+updateThemeIcon();
+
+document.getElementById('themeBtn').addEventListener('click', function() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  localStorage.setItem('theme', currentTheme);
+  updateThemeIcon();
+  showToast('Switched to ' + currentTheme + ' mode');
+});
+
+function updateThemeIcon() {
+  document.getElementById('themeBtn').textContent = currentTheme === 'light' ? '🌙' : '☀️';
+}
 
 // ── DEVICE DETECTION ─────────────────────────────
-function isIOS()     { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
 function isAndroid() { return /Android/.test(navigator.userAgent); }
-function isMobile()  { return isIOS() || isAndroid(); }
+function isMobile() { return isIOS() || isAndroid(); }
+function isTouchDevice() { return 'ontouchstart' in window || navigator.maxTouchPoints > 0; }
 
-// ── UTILITY: Debounce for performance ──────────────
-function debounce(func, wait) {
-  var timeout;
-  return function() {
-    var context = this, args = arguments;
-    clearTimeout(timeout);
-    timeout = setTimeout(function() { func.apply(context, args); }, wait);
+// ── TOAST ────────────────────────────────────────
+function showToast(msg, isError) {
+  toastEl.textContent = msg;
+  toastEl.className = 'toast' + (isError ? ' error' : '');
+  toastEl.classList.add('show');
+  setTimeout(function() { toastEl.classList.remove('show'); }, 3000);
+}
+
+// ── CONFIRM MODAL ────────────────────────────────
+function confirmAction(title, text, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  var modal = document.getElementById('confirmModal');
+  modal.classList.add('show');
+
+  document.getElementById('confirmYes').onclick = function() {
+    modal.classList.remove('show');
+    onConfirm();
   };
+
+  document.getElementById('confirmNo').onclick = function() {
+    modal.classList.remove('show');
+  };
+}
+
+// ── LOCAL STORAGE ────────────────────────────────
+function saveData() {
+  try {
+    var data = { info: [], rows: [], theme: currentTheme };
+    document.querySelectorAll('.info-table input').forEach(function(inp) {
+      data.info.push(inp.value);
+    });
+    tbody.querySelectorAll('tr').forEach(function(row) {
+      var inputs = row.querySelectorAll('input');
+      data.rows.push({
+        date: inputs[0].value,
+        material: inputs[1].value,
+        qty: inputs[2].value,
+        price: inputs[3].value
+      });
+    });
+    localStorage.setItem('sriSawdammalReceipt', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadData() {
+  try {
+    var saved = localStorage.getItem('sriSawdammalReceipt');
+    if (!saved) return false;
+    var data = JSON.parse(saved);
+
+    if (data.theme) {
+      currentTheme = data.theme;
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      updateThemeIcon();
+    }
+
+    var infoInputs = document.querySelectorAll('.info-table input');
+    data.info.forEach(function(val, i) {
+      if (infoInputs[i]) infoInputs[i].value = val;
+    });
+
+    tbody.innerHTML = '';
+    data.rows.forEach(function(rowData) {
+      var row = makeRow(tbody.rows.length + 1);
+      var inputs = row.querySelectorAll('input');
+      inputs[0].value = rowData.date || '';
+      inputs[1].value = rowData.material || '';
+      inputs[2].value = rowData.qty || '';
+      inputs[3].value = rowData.price || '';
+      tbody.appendChild(row);
+    });
+
+    if (tbody.rows.length === 0) {
+      for (var i = 1; i <= 10; i++) tbody.appendChild(makeRow(i));
+    }
+
+    addEvents();
+    updateTotals();
+    return true;
+  } catch(e) { return false; }
 }
 
 // ── CREATE ROW ───────────────────────────────────
 function makeRow(n) {
+  var d = new Date().toISOString().split('T')[0];
   var tr = document.createElement('tr');
   tr.innerHTML =
     '<td>' + n + '</td>' +
-    '<td><input type="text" placeholder="DD/MM/YYYY" inputmode="numeric"></td>' +
-    '<td><input type="text" placeholder="Enter material..."></td>' +
-    '<td><input type="number" class="qty" min="0" inputmode="decimal" placeholder="0"></td>' +
-    '<td><input type="number" class="price" min="0" inputmode="decimal" placeholder="0.00"></td>' +
-    '<td class="total">-</td>';
+    '<td><input type="date" value="' + d + '"></td>' +
+    '<td><input type="text" placeholder="Material name" autocomplete="off" autocorrect="off" autocapitalize="words"></td>' +
+    '<td><input type="number" class="qty" min="0" step="0.01" inputmode="decimal" placeholder="0" autocomplete="off" pattern="[0-9]*"></td>' +
+    '<td><input type="number" class="price" min="0" step="0.01" inputmode="decimal" placeholder="0.00" autocomplete="off" pattern="[0-9]*"></td>' +
+    '<td class="total">0.00</td>' +
+    '<td class="del-col"><button class="delete-btn" title="Remove">×</button></td>';
+
+  tr.querySelector('.delete-btn').addEventListener('click', function() {
+    deleteRow(tr);
+  });
+
   return tr;
+}
+
+function deleteRow(row) {
+  row.style.transition = 'all 0.3s ease';
+  row.style.opacity = '0';
+  row.style.transform = 'translateX(-20px)';
+  setTimeout(function() {
+    row.remove();
+    renumberRows();
+    updateTotals();
+    saveData();
+  }, 300);
+}
+
+function renumberRows() {
+  tbody.querySelectorAll('tr').forEach(function(row, i) {
+    row.cells[0].textContent = i + 1;
+  });
 }
 
 // ── UPDATE TOTALS ────────────────────────────────
 function updateTotals() {
-  var grand = 0;
-  var rowCount = 0;
+  var grand = 0, totalQty = 0, items = 0;
+
   tbody.querySelectorAll('tr').forEach(function(row, i) {
-    row.cells[0].innerText = i + 1;
-    var qty   = parseFloat(row.querySelector('.qty').value);
-    var price = parseFloat(row.querySelector('.price').value);
-    var totalCell = row.querySelector('.total');
-    if (!isNaN(qty) && !isNaN(price) && qty > 0 && price > 0) {
-      var t = qty * price;
-      totalCell.innerText = '₹ ' + t.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      totalCell.style.color = '#1a1a1a';
-      grand += t;
-      rowCount++;
-    } else {
-      totalCell.innerText = '-';
-      totalCell.style.color = '#999';
+    row.cells[0].textContent = i + 1;
+    var qty = parseFloat(row.querySelector('.qty').value) || 0;
+    var price = parseFloat(row.querySelector('.price').value) || 0;
+    var t = qty * price;
+
+    row.querySelector('.total').textContent = t.toFixed(2);
+    grand += t;
+    if (qty > 0) {
+      totalQty += qty;
+      items++;
     }
   });
-  grandTotalEl.innerText = '₹ ' + grand.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-  // Visual feedback on grand total
-  if (grand > 0) {
-    grandTotalEl.style.color = '#2e7d32';
-  } else {
-    grandTotalEl.style.color = '#1a1a1a';
-  }
+  grandTotalEl.textContent = '₹ ' + grand.toFixed(2);
+  statItems.textContent = items;
+  statQty.textContent = totalQty.toFixed(2);
+  statSubtotal.textContent = '₹ ' + grand.toFixed(2);
+  saveData();
 }
-
-var debouncedUpdateTotals = debounce(updateTotals, 150);
 
 function addEvents() {
   document.querySelectorAll('.qty, .price').forEach(function(inp) {
-    inp.addEventListener('input', debouncedUpdateTotals);
-    // Auto-tab on Enter
-    inp.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        var inputs = Array.from(document.querySelectorAll('.qty, .price'));
-        var idx = inputs.indexOf(inp);
-        if (idx >= 0 && idx < inputs.length - 1) {
-          inputs[idx + 1].focus();
-        }
-      }
+    inp.addEventListener('input', function() {
+      if (this.value < 0) this.value = 0;
+      updateTotals();
     });
+  });
+
+  document.querySelectorAll('input').forEach(function(inp) {
+    inp.addEventListener('change', saveData);
   });
 }
 
 // ── ADD ROW ──────────────────────────────────────
 document.getElementById('addRowBtn').addEventListener('click', function() {
-  var newRow = makeRow(tbody.rows.length + 1);
-  tbody.appendChild(newRow);
+  var row = makeRow(tbody.rows.length + 1);
+  row.style.opacity = '0';
+  row.style.transform = 'translateY(-10px)';
+  tbody.appendChild(row);
+
+  requestAnimationFrame(function() {
+    row.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    row.style.opacity = '1';
+    row.style.transform = 'translateY(0)';
+  });
+
   addEvents();
   updateTotals();
-  // Auto-focus first input of new row
-  var firstInput = newRow.querySelector('input');
-  if (firstInput) firstInput.focus();
 
-  // Smooth scroll to new row on mobile
-  if (isMobile()) {
-    setTimeout(function() {
-      newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+  setTimeout(function() {
+    var firstInput = row.querySelector('input[type="date"]');
+    if (firstInput) firstInput.focus();
+  }, 100);
+});
+
+// ── CLEAR ALL ────────────────────────────────────
+document.getElementById('clearBtn').addEventListener('click', function() {
+  confirmAction('Clear All Data', 'This will delete all items. Are you sure?', function() {
+    tbody.innerHTML = '';
+    for (var i = 1; i <= 10; i++) tbody.appendChild(makeRow(i));
+    document.getElementById('fromField').value = '';
+    document.getElementById('toField').value = '';
+    addEvents();
+    updateTotals();
+    localStorage.removeItem('sriSawdammalReceipt');
+    showToast('All data cleared');
+  });
+});
+
+// ── KEYBOARD SHORTCUTS ───────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('addRowBtn').click();
+  }
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    document.getElementById('saveBtn').click();
+  }
+  if (e.ctrlKey && e.key === 'p') {
+    e.preventDefault();
+    document.getElementById('printBtn').click();
   }
 });
 
-// ── BUILD SHARE TEXT ─────────────────────────────
+// ── SHARE ────────────────────────────────────────
 function buildShareText() {
-  var from  = document.getElementById('fromField').value || '-';
-  var to    = document.getElementById('toField').value   || '-';
-  var place = document.querySelector('.info-table tr:first-child td:nth-child(5) input')?.value || '-';
-
+  var from = document.getElementById('fromField').value || '-';
+  var to = document.getElementById('toField').value || '-';
   var lines = [
-    '🏗️ *Sri Sawdammal Infra*',
-    '━━━━━━━━━━━━━━━━━━━━━━━',
-    '📍 From: ' + from,
-    '📍 To:   ' + to,
-    '📍 Place: ' + place,
-    '━━━━━━━━━━━━━━━━━━━━━━━',
+    '*SRI SAWDAMMAL INFRA*',
+    'Date: ' + new Date().toLocaleDateString('en-IN'),
+    'From: ' + from,
+    'To: ' + to,
+    '------------------------',
     'No | Date | Material | Qty | Price | Total'
   ];
 
-  var hasData = false;
   tbody.querySelectorAll('tr').forEach(function(row) {
     var inp = row.querySelectorAll('input');
-    var total = row.querySelector('.total').innerText;
-    if (inp[0].value || inp[1].value || inp[2].value || inp[3].value) {
-      hasData = true;
+    var total = row.querySelector('.total').textContent;
+    if (inp[1].value || inp[2].value) {
       lines.push(
-        row.cells[0].innerText + ' | ' +
+        row.cells[0].textContent + ' | ' +
         (inp[0].value || '-') + ' | ' +
         (inp[1].value || '-') + ' | ' +
         (inp[2].value || '-') + ' | ' +
         (inp[3].value || '-') + ' | ' +
-        total
+        '₹' + total
       );
     }
   });
 
-  if (!hasData) {
-    lines.push('(No items entered)');
-  }
-
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('💰 *Grand Total: ' + grandTotalEl.innerText + '*');
+  lines.push('------------------------');
+  lines.push('Grand Total: ' + grandTotalEl.textContent);
   return lines.join('\n');
 }
 
-// ── SHARE BUTTON ─────────────────────────────────
 document.getElementById('shareBtn').addEventListener('click', function() {
   var text = buildShareText();
   if (navigator.share) {
-    navigator.share({ 
-      title: 'Sri Sawdammal Infra Receipt', 
-      text: text 
-    }).catch(function(e) { 
-      if (e.name !== 'AbortError') fallbackCopy(text); 
-    });
+    navigator.share({ title: 'Sri Sawdammal Infra', text: text })
+      .catch(function(e) { if (e.name !== 'AbortError') fallbackCopy(text); });
   } else {
     fallbackCopy(text);
   }
@@ -156,7 +288,7 @@ document.getElementById('shareBtn').addEventListener('click', function() {
 function fallbackCopy(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function() {
-      showToast('✅ Receipt copied to clipboard!');
+      showToast('Copied to clipboard!');
     }).catch(function() { legacyCopy(text); });
   } else {
     legacyCopy(text);
@@ -169,38 +301,12 @@ function legacyCopy(text) {
   ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;z-index:-1;';
   document.body.appendChild(ta);
   ta.focus(); ta.select();
-  try { 
-    document.execCommand('copy'); 
-    showToast('✅ Copied to clipboard!'); 
-  }
-  catch(e) { 
-    alert(text); 
-  }
+  try { document.execCommand('copy'); showToast('Copied!'); }
+  catch(e) { alert(text); }
   document.body.removeChild(ta);
 }
 
-// ── TOAST NOTIFICATION ───────────────────────────
-function showToast(message) {
-  var existing = document.querySelector('.toast-notification');
-  if (existing) existing.remove();
-
-  var toast = document.createElement('div');
-  toast.className = 'toast-notification';
-  toast.innerText = message;
-  toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#2e7d32;color:white;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:10000;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:slideDown 0.3s ease;';
-
-  var style = document.createElement('style');
-  style.innerText = '@keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}';
-  document.head.appendChild(style);
-
-  document.body.appendChild(toast);
-  setTimeout(function() {
-    toast.style.animation = 'slideDown 0.3s ease reverse';
-    setTimeout(function() { toast.remove(); }, 300);
-  }, 2500);
-}
-
-// ── BUILD FULL RECEIPT HTML ───────────────────────
+// ── BUILD HTML ───────────────────────────────────
 function buildReceiptHTML() {
   var iv = [];
   document.querySelectorAll('.info-table input').forEach(function(inp) {
@@ -208,179 +314,153 @@ function buildReceiptHTML() {
   });
 
   var rowsHTML = '';
-  var rowCount = 0;
   tbody.querySelectorAll('tr').forEach(function(row, i) {
     var inp = row.querySelectorAll('input');
-    var total = row.querySelector('.total').innerText;
-    if (inp[0].value || inp[1].value || inp[2].value || inp[3].value) {
-      rowCount++;
+    var total = row.querySelector('.total').textContent;
+    if (inp[1].value || inp[2].value) {
       rowsHTML +=
         '<tr>' +
-        '<td style="text-align:center;border:1px solid #000;padding:6px;width:40px;font-weight:600;">' + (i+1) + '</td>' +
-        '<td style="border:1px solid #000;padding:6px;font-size:13px;">'                   + (inp[0].value||'') + '</td>' +
-        '<td style="border:1px solid #000;padding:6px;font-size:13px;">'                   + (inp[1].value||'') + '</td>' +
-        '<td style="border:1px solid #000;padding:6px;text-align:center;font-size:13px;">' + (inp[2].value||'') + '</td>' +
-        '<td style="border:1px solid #000;padding:6px;text-align:center;font-size:13px;">' + (inp[3].value||'') + '</td>' +
-        '<td style="border:1px solid #000;padding:6px;text-align:center;font-weight:700;font-size:13px;">' + total + '</td>' +
+        '<td style="text-align:center;border:1px solid #000;padding:6px;">' + (i+1) + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + (inp[0].value||'') + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + (inp[1].value||'') + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;text-align:center;">' + (inp[2].value||'') + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;text-align:center;">' + (inp[3].value||'') + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;text-align:center;font-weight:bold;">₹' + total + '</td>' +
         '</tr>';
     }
   });
-
-  if (rowCount === 0) {
-    rowsHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;border:1px solid #000;color:#999;font-style:italic;">No items entered</td></tr>';
-  }
 
   return '<!DOCTYPE html><html><head>' +
     '<meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1.0">' +
     '<title>Sri Sawdammal Infra Receipt</title>' +
     '<style>' +
-      'body{margin:0;padding:12px;background:#f5f5f5;font-family:Arial,sans-serif}' +
-      '.wrap{max-width:900px;margin:auto;background:#fff;border:2px solid #1a1a1a;border-radius:4px;box-shadow:0 8px 32px rgba(0,0,0,0.1)}' +
+      'body{margin:0;padding:10px;background:#d9d9d9;font-family:Arial,sans-serif}' +
+      '.wrap{max-width:900px;margin:auto;background:#fff;border:2px solid #000}' +
       'table{width:100%;border-collapse:collapse}' +
-      '@media print{body{background:#fff;padding:0}.no-print{display:none!important}.wrap{box-shadow:none;border-radius:0}}' +
+      '@media print{body{background:#fff;padding:0}.no-print{display:none!important}}' +
     '</style>' +
     '</head><body>' +
     '<div class="wrap">' +
-      '<div style="background:linear-gradient(135deg,#ffd700 0%,#ffcc00 50%,#e6b800 100%);text-align:center;padding:16px 10px;border-bottom:2px solid #1a1a1a;">' +
-        '<h1 style="font-size:clamp(24px,5vw,42px);font-style:italic;color:#1a1a1a;margin:0;text-shadow:1px 1px 2px rgba(0,0,0,0.1);">Sri Sawdammal Infra</h1>' +
-      '</div>' +
-      '<table>' +
-        '<tr>' +
-          '<td style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);font-weight:700;width:80px;text-align:center;border:1px solid #000;padding:6px 8px;font-size:13px;color:#fff;">From :</td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[0] + '</td>' +
-          '<td rowspan="4" style="background:#f2f2f2;width:60px;border:1px solid #000;"></td>' +
-          '<td style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);font-weight:700;text-align:center;border:1px solid #000;padding:6px 8px;font-size:13px;color:#fff;">Place :</td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[1] + '</td>' +
-        '</tr><tr>' +
-          '<td style="border:1px solid #000;padding:6px 8px;"></td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;"></td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;"></td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[2] + '</td>' +
-        '</tr><tr>' +
-          '<td style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);font-weight:700;text-align:center;border:1px solid #000;padding:6px 8px;font-size:13px;color:#fff;">To :</td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[3] + '</td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;"></td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[4] + '</td>' +
-        '</tr><tr>' +
-          '<td style="border:1px solid #000;padding:6px 8px;"></td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;text-align:center;font-weight:700;font-size:13px;letter-spacing:1px;">MATERIAL OUTPUT</td>' +
-          '<td style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);font-weight:700;text-align:center;border:1px solid #000;padding:6px 8px;font-size:13px;color:#fff;">Cell No :</td>' +
-          '<td style="border:1px solid #000;padding:6px 8px;font-size:13px;">' + iv[5] + '<br>' + (iv[6]||'') + '</td>' +
-        '</tr>' +
-      '</table>' +
-      '<table>' +
-        '<thead><tr>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;width:40px;color:#fff;font-weight:700;">NO</th>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;color:#fff;font-weight:700;">Date</th>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;color:#fff;font-weight:700;">Material</th>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;color:#fff;font-weight:700;">Qty</th>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;color:#fff;font-weight:700;">Price</th>' +
-          '<th style="background:linear-gradient(135deg,#c69c6d 0%,#b88d5e 100%);border:1px solid #000;padding:8px 6px;color:#fff;font-weight:700;">Total</th>' +
-        '</tr></thead>' +
-        '<tbody>' + rowsHTML + '</tbody>' +
-        '<tfoot><tr>' +
-          '<td colspan="4" style="text-align:right;font-size:20px;font-weight:800;padding:10px 14px;border:1px solid #000;letter-spacing:0.5px;">Total</td>' +
-          '<td colspan="2" style="text-align:center;font-size:20px;font-weight:800;border:1px solid #000;letter-spacing:0.5px;">' + grandTotalEl.innerText + '</td>' +
-        '</tr></tfoot>' +
-      '</table>' +
+    '<div style="background:linear-gradient(135deg,#1f4e79,#2f73b8);color:#fff;text-align:center;padding:20px;border-bottom:2px solid #000;">' +
+      '<h1 style="font-size:clamp(24px,5vw,42px);font-style:italic;margin:0;">Sri Sawdammal Infra</h1>' +
+      '<p style="margin:5px 0 0;font-size:14px;opacity:0.9;">Date: ' + new Date().toLocaleDateString('en-IN') + '</p>' +
     '</div>' +
-    '</body></html>';
+    '<table style="margin-bottom:15px">' +
+      '<tr>' +
+        '<td style="background:#c69c6d;font-weight:bold;width:80px;text-align:center;border:1px solid #000;padding:6px;">From :</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[0] + '</td>' +
+        '<td rowspan="4" style="background:#f2f2f2;width:60px;border:1px solid #000;"></td>' +
+        '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:6px;">Place :</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[2] + '</td>' +
+      '</tr><tr>' +
+        '<td style="border:1px solid #000;padding:6px;"></td>' +
+        '<td style="border:1px solid #000;padding:6px;"></td>' +
+        '<td style="border:1px solid #000;padding:6px;"></td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[3] + '</td>' +
+      '</tr><tr>' +
+        '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:6px;">To :</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[1] + '</td>' +
+        '<td style="border:1px solid #000;padding:6px;"></td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[4] + '</td>' +
+      '</tr><tr>' +
+        '<td style="border:1px solid #000;padding:6px;"></td>' +
+        '<td style="border:1px solid #000;padding:6px;text-align:center;font-weight:bold;">MATERIAL INPUT</td>' +
+        '<td style="background:#c69c6d;font-weight:bold;text-align:center;border:1px solid #000;padding:6px;">Cell No :</td>' +
+        '<td style="border:1px solid #000;padding:6px;">' + iv[5] + '<br>' + (iv[6]||'') + '</td>' +
+      '</tr>' +
+    '</table>' +
+    '<table>' +
+      '<thead><tr>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">NO</th>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">Date</th>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">Material</th>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">Qty</th>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">Price</th>' +
+        '<th style="background:#1f4e79;color:#fff;border:1px solid #000;padding:6px;">Total</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rowsHTML + '</tbody>' +
+      '<tfoot><tr>' +
+        '<td colspan="4" style="text-align:right;font-size:18px;font-weight:bold;padding:10px 15px;border:1px solid #000;">Grand Total</td>' +
+        '<td colspan="2" style="text-align:center;font-size:18px;font-weight:bold;border:1px solid #000;background:#fff3cd;color:#d9534f;">' + grandTotalEl.textContent + '</td>' +
+      '</tr></tfoot>' +
+    '</table>' +
+    '<div style="text-align:center;padding:15px;font-size:11px;color:#888">Thank you for your business!</div>' +
+    '</div></body></html>';
 }
 
-// ── SAVE BUTTON ──────────────────────────────────
-// Strategy:
-//   Desktop Chrome/Edge  → showSaveFilePicker (direct save dialog)
-//   Android Chrome       → data: URI with <a download> trick — goes to Downloads folder
-//   iPhone Safari        → open in new tab → user saves via Share → Save to Files
-//   Fallback             → data: URI download
-
+// ── SAVE ─────────────────────────────────────────
 document.getElementById('saveBtn').addEventListener('click', function() {
-  var html     = buildReceiptHTML();
+  var html = buildReceiptHTML();
   var filename = 'SriSawdammal_Receipt_' + new Date().toISOString().slice(0,10) + '.html';
 
-  // ── Desktop: File System Access API ──
   if (window.showSaveFilePicker && !isMobile()) {
     var blob = new Blob([html], { type: 'text/html' });
     window.showSaveFilePicker({
-      suggestedName : filename,
+      suggestedName: filename,
       types: [{ description: 'HTML File', accept: { 'text/html': ['.html'] } }]
     }).then(function(fh) {
       return fh.createWritable();
     }).then(function(w) {
       return w.write(blob).then(function() { return w.close(); });
     }).then(function() {
-      showToast('✅ Receipt saved successfully!');
+      showToast('Receipt saved!');
     }).catch(function(e) {
       if (e.name !== 'AbortError') downloadViaAnchor(html, filename);
     });
     return;
   }
 
-  // ── Android: anchor download — saves directly to Downloads ──
   if (isAndroid()) {
     downloadViaAnchor(html, filename);
     return;
   }
 
-  // ── iPhone: open in new tab with save instructions banner ──
   if (isIOS()) {
     var blob = new Blob([html], { type: 'text/html' });
-    var url  = URL.createObjectURL(blob);
-    showSaveModal(url, filename);
+    var url = URL.createObjectURL(blob);
+    showSaveModal(url);
     return;
   }
 
-  // ── Other / unknown ──
   downloadViaAnchor(html, filename);
 });
 
-// Anchor-based download — works on Android Chrome → saves to Downloads folder
 function downloadViaAnchor(html, filename) {
   try {
-    // Try data URI first (most compatible on Android)
     var dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
     var a = document.createElement('a');
-    a.href     = dataUri;
+    a.href = dataUri;
     a.download = filename;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
-    // Show confirmation after short delay
-    setTimeout(function() {
-      showToast('✅ Receipt saved! Check Downloads folder.');
-    }, 800);
+    setTimeout(function() { showToast('Saved! Check Downloads.'); }, 800);
   } catch(e) {
-    // Blob URL fallback
     var blob = new Blob([html], { type: 'text/html' });
-    var url  = URL.createObjectURL(blob);
-    var a2   = document.createElement('a');
-    a2.href     = url;
+    var url = URL.createObjectURL(blob);
+    var a2 = document.createElement('a');
+    a2.href = url;
     a2.download = filename;
     a2.style.display = 'none';
     document.body.appendChild(a2);
     a2.click();
     document.body.removeChild(a2);
     setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-    setTimeout(function() { showToast('✅ Receipt saved! Check Downloads folder.'); }, 800);
+    setTimeout(function() { showToast('Saved! Check Downloads.'); }, 800);
   }
 }
 
-// iOS modal — open in new tab, user does Share → Save to Files
-function showSaveModal(url, filename) {
+function showSaveModal(url) {
   var modal = document.getElementById('saveModal');
   var steps = document.getElementById('modalSteps');
-  var modalText = document.getElementById('modalText');
-
-  modalText.innerText = 'Receipt: ' + filename;
 
   steps.innerHTML =
-    '<div><span>1</span> Tap <b>Open Receipt</b> below</div>' +
-    '<div><span>2</span> Tap the <b>Share icon</b> <span style="font-size:15px;">⬆</span> at the bottom</div>' +
-    '<div><span>3</span> Scroll down and tap <b>Save to Files</b></div>' +
-    '<div><span>4</span> Choose a folder and tap <b>Save</b></div>';
+    '<div><span>1</span> Tap <b>Open Receipt</b></div>' +
+    '<div><span>2</span> Tap <b>Share</b> ⬆ at bottom</div>' +
+    '<div><span>3</span> Choose <b>Save to Files</b></div>' +
+    '<div><span>4</span> Tap <b>Save</b></div>';
 
   modal.classList.add('show');
 
@@ -394,123 +474,37 @@ function showSaveModal(url, filename) {
     modal.classList.remove('show');
     URL.revokeObjectURL(url);
   };
-
-  // Close on backdrop click
-  modal.onclick = function(e) {
-    if (e.target === modal) {
-      modal.classList.remove('show');
-      URL.revokeObjectURL(url);
-    }
-  };
 }
 
-// ── PRINT BUTTON ─────────────────────────────────
-// On mobile, we open the receipt HTML in a new window and print from there.
-// This avoids the common issue where window.print() on mobile ignores @media print
-// or doesn't trigger at all on Samsung Browser / older WebViews.
-
+// ── PRINT ────────────────────────────────────────
 document.getElementById('printBtn').addEventListener('click', function() {
   if (isMobile()) {
-    // Open receipt page in new tab — user taps browser Print from the menu
-    // OR we auto-trigger print in the new window
     var html = buildReceiptHTML();
-    // Inject auto-print script into the receipt HTML
     var printHTML = html.replace(
       '</body>',
       '<script>window.onload=function(){setTimeout(function(){window.print();},400);}<\/script></body>'
     );
     var blob = new Blob([printHTML], { type: 'text/html' });
-    var url  = URL.createObjectURL(blob);
-    var win  = window.open(url, '_blank');
-    // If popup blocked, fallback to same-window print
+    var url = URL.createObjectURL(blob);
+    var win = window.open(url, '_blank');
     if (!win || win.closed || typeof win.closed === 'undefined') {
       setTimeout(function() { window.print(); }, 150);
     }
     setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
   } else {
-    // Desktop — standard print with loading indicator
-    showToast('🖨️ Opening print dialog...');
-    setTimeout(function() { window.print(); }, 300);
-  }
-});
-
-// ── KEYBOARD SHORTCUTS ───────────────────────────
-document.addEventListener('keydown', function(e) {
-  // Ctrl/Cmd + Enter = Print
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    e.preventDefault();
-    document.getElementById('printBtn').click();
-  }
-  // Ctrl/Cmd + S = Save
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    document.getElementById('saveBtn').click();
+    setTimeout(function() { window.print(); }, 100);
   }
 });
 
 // ── INIT ─────────────────────────────────────────
-for (var i = 1; i <= 10; i++) tbody.appendChild(makeRow(i));
-addEvents();
-updateTotals();
-
-// ── AUTO-SAVE DRAFT TO LOCALSTORAGE ──────────────
-function saveDraft() {
-  try {
-    var data = {
-      from: document.getElementById('fromField').value,
-      to: document.getElementById('toField').value,
-      info: [],
-      rows: []
-    };
-    document.querySelectorAll('.info-table input').forEach(function(inp) {
-      data.info.push(inp.value);
-    });
-    tbody.querySelectorAll('tr').forEach(function(row) {
-      var inp = row.querySelectorAll('input');
-      data.rows.push({
-        date: inp[0].value,
-        material: inp[1].value,
-        qty: inp[2].value,
-        price: inp[3].value
-      });
-    });
-    localStorage.setItem('sriSawdammalDraft', JSON.stringify(data));
-  } catch(e) {}
-}
-
-function loadDraft() {
-  try {
-    var draft = localStorage.getItem('sriSawdammalDraft');
-    if (!draft) return;
-    var data = JSON.parse(draft);
-    document.getElementById('fromField').value = data.from || '';
-    document.getElementById('toField').value = data.to || '';
-    var infoInputs = document.querySelectorAll('.info-table input');
-    data.info.forEach(function(val, i) {
-      if (infoInputs[i]) infoInputs[i].value = val;
-    });
-
-    // Clear existing rows and rebuild
-    tbody.innerHTML = '';
-    data.rows.forEach(function(rowData, i) {
-      var row = makeRow(i + 1);
-      var inp = row.querySelectorAll('input');
-      inp[0].value = rowData.date || '';
-      inp[1].value = rowData.material || '';
-      inp[2].value = rowData.qty || '';
-      inp[3].value = rowData.price || '';
-      tbody.appendChild(row);
-    });
+function init() {
+  var loaded = loadData();
+  if (!loaded) {
+    for (var i = 1; i <= 10; i++) tbody.appendChild(makeRow(i));
     addEvents();
     updateTotals();
-  } catch(e) {}
+  }
+  showToast('Welcome! Auto-save is ON');
 }
 
-// Auto-save every 10 seconds and on input
-setInterval(saveDraft, 10000);
-document.querySelectorAll('input').forEach(function(inp) {
-  inp.addEventListener('input', debounce(saveDraft, 500));
-});
-
-// Load draft on page load
-loadDraft();
+init();
