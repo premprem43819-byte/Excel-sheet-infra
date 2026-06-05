@@ -4,7 +4,9 @@ var toastEl = document.getElementById('toast');
 var statItems = document.getElementById('statItems');
 var statQty = document.getElementById('statQty');
 var statSubtotal = document.getElementById('statSubtotal');
+
 document.getElementById('today').textContent = 'Date: ' + new Date().toLocaleDateString('en-IN');
+
 var currentTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeIcon();
@@ -20,16 +22,19 @@ document.getElementById('themeBtn').addEventListener('click', function() {
 function updateThemeIcon() {
   document.getElementById('themeBtn').textContent = currentTheme === 'light' ? '🌙' : '☀️';
 }
+
 function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
 function isAndroid() { return /Android/.test(navigator.userAgent); }
 function isMobile() { return isIOS() || isAndroid(); }
 function isTouchDevice() { return 'ontouchstart' in window || navigator.maxTouchPoints > 0; }
+
 function showToast(msg, isError) {
   toastEl.textContent = msg;
   toastEl.className = 'toast' + (isError ? ' error' : '');
   toastEl.classList.add('show');
   setTimeout(function() { toastEl.classList.remove('show'); }, 3000);
 }
+
 function confirmAction(title, text, onConfirm) {
   document.getElementById('confirmTitle').textContent = title;
   document.getElementById('confirmText').textContent = text;
@@ -45,6 +50,7 @@ function confirmAction(title, text, onConfirm) {
     modal.classList.remove('show');
   };
 }
+
 function saveData() {
   try {
     var data = { info: [], rows: [], theme: currentTheme };
@@ -101,6 +107,7 @@ function loadData() {
     return true;
   } catch(e) { return false; }
 }
+
 function makeRow(n) {
   var d = new Date().toISOString().split('T')[0];
   var tr = document.createElement('tr');
@@ -137,6 +144,7 @@ function renumberRows() {
     row.cells[0].textContent = i + 1;
   });
 }
+
 function updateTotals() {
   var grand = 0, totalQty = 0, items = 0;
 
@@ -173,6 +181,7 @@ function addEvents() {
     inp.addEventListener('change', saveData);
   });
 }
+
 document.getElementById('addRowBtn').addEventListener('click', function() {
   var row = makeRow(tbody.rows.length + 1);
   row.style.opacity = '0';
@@ -193,6 +202,7 @@ document.getElementById('addRowBtn').addEventListener('click', function() {
     if (firstInput) firstInput.focus();
   }, 100);
 });
+
 document.getElementById('clearBtn').addEventListener('click', function() {
   confirmAction('Clear All Data', 'This will delete all items. Are you sure?', function() {
     tbody.innerHTML = '';
@@ -205,6 +215,7 @@ document.getElementById('clearBtn').addEventListener('click', function() {
     showToast('All data cleared');
   });
 });
+
 document.addEventListener('keydown', function(e) {
   if (e.ctrlKey && e.key === 'Enter') {
     e.preventDefault();
@@ -219,6 +230,7 @@ document.addEventListener('keydown', function(e) {
     document.getElementById('printBtn').click();
   }
 });
+
 function buildShareText() {
   var from = document.getElementById('fromField').value || '-';
   var to = document.getElementById('toField').value || '-';
@@ -471,6 +483,7 @@ document.getElementById('printBtn').addEventListener('click', function() {
     setTimeout(function() { window.print(); }, 100);
   }
 });
+
 function init() {
   var loaded = loadData();
   if (!loaded) {
