@@ -466,22 +466,26 @@ function showSaveModal(url) {
 
 // ── PRINT ────────────────────────────────────────
 document.getElementById('printBtn').addEventListener('click', function() {
-  if (isMobile()) {
-    var html = buildReceiptHTML();
-    var printHTML = html.replace(
-      '</body>',
-      '<script>window.onload=function(){setTimeout(function(){window.print();},400);}<\/script></body>'
-    );
-    var blob = new Blob([printHTML], { type: 'text/html' });
-    var url = URL.createObjectURL(blob);
-    var win = window.open(url, '_blank');
-    if (!win || win.closed || typeof win.closed === 'undefined') {
-      setTimeout(function() { window.print(); }, 150);
+  var html = buildReceiptHTML();
+  var blob = new Blob([html], { type: 'text/html' });
+  var url = URL.createObjectURL(blob);
+  var win = window.open(url, '_blank');
+  
+  // If popup blocked, show toast with instructions
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    if (isMobile()) {
+      showToast('Please allow popups, then tap Print again', true);
+      setTimeout(function() { window.location.href = url; }, 500);
+    } else {
+      window.print();
     }
-    setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
   } else {
-    setTimeout(function() { window.print(); }, 100);
+    if (isMobile()) {
+      showToast('Receipt opened! Tap the print button inside');
+    }
   }
+  
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
 });
 
 function init() {
