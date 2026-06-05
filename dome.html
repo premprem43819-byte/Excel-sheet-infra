@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Sri Sawdammal Infra</title>
-<link rel="stylesheet" href="domo.css"/>
+<link rel="stylesheet" href="vote.css">
 </head>
 <body>
 
-<!-- Save Modal -->
-<div id="saveModal">
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeBtn" title="Toggle Dark/Light">🌙</button>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal-overlay">
   <div class="modal-box">
-    <h2>💾 Save Receipt</h2>
-    <p id="modalText"></p>
+    <div class="modal-icon">⚠️</div>
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmText">Are you sure?</p>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-danger" id="confirmYes">Yes</button>
+      <button class="mbtn mbtn-secondary" id="confirmNo">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save Modal -->
+<div id="saveModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">💾</div>
+    <h3>Save Receipt</h3>
+    <p>Choose how to save your receipt</p>
     <div class="modal-steps" id="modalSteps"></div>
     <div class="modal-btns">
       <button class="mbtn mbtn-primary" id="modalOpenBtn">Open Receipt</button>
@@ -24,60 +44,82 @@
 <div class="receipt-container">
   <div class="title-box">
     <h1>Sri Sawdammal Infra (Input)</h1>
+    <p id="today"></p>
   </div>
 
   <table class="info-table">
     <tr>
       <td class="label">From :</td>
-      <td><input type="text" id="fromField"></td>
+      <td><input type="text" id="fromField" placeholder="Enter sender name"></td>
       <td rowspan="4" class="empty-box"></td>
       <td class="label">Place :</td>
-      <td><input type="text" value="Kendaigoundanur"></td>
+      <td><input type="text" value="Kendaigoundanur" placeholder="Location"></td>
     </tr>
     <tr>
-      <td></td><td></td>
-      <td></td><td><input type="text" value="Sullerumbu"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><input type="text" value="Sullerumbu" placeholder="Area"></td>
     </tr>
     <tr>
       <td class="label">To :</td>
-      <td><input type="text" id="toField"></td>
-      <td></td><td><input type="text" value="Dindigul"></td>
+      <td><input type="text" id="toField" placeholder="Enter recipient name"></td>
+      <td></td>
+      <td><input type="text" value="Dindigul" placeholder="City"></td>
     </tr>
     <tr>
       <td></td>
       <td id="material-label">MATERIAL INPUT</td>
       <td class="label">Cell No :</td>
       <td>
-        <input type="text" value="7904689983"><br>
-        <input type="text" value="6369477188">
+        <input type="text" value="7904869983" placeholder="Primary Phone"><br>
+        <input type="text" value="6369477188" placeholder="Secondary Phone">
       </td>
     </tr>
   </table>
 
-  <table id="receiptTable">
-    <thead>
-      <tr>
-        <th>NO</th><th>Date</th><th>Material</th>
-        <th>Qty</th><th>Price</th><th>Total</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4" class="grand-text">Total</td>
-        <td colspan="2" id="grandTotal">₹ 0.00</td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class="table-scroll">
+    <table id="receiptTable">
+      <thead>
+        <tr>
+          <th>NO</th>
+          <th>Date</th>
+          <th>Material</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Total</th>
+          <th class="del-col">Del</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="grand-text">Grand Total</td>
+          <td colspan="3" id="grandTotal">₹ 0.00</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="stats-bar">
+    <span>Items: <b id="statItems">0</b></span>
+    <span>Qty: <b id="statQty">0</b></span>
+    <span>Subtotal: <b id="statSubtotal">₹ 0.00</b></span>
+  </div>
 
   <div class="buttons">
     <button class="btn" id="addRowBtn">➕ Add Row</button>
     <button class="btn" id="shareBtn">📤 Share</button>
     <button class="btn" id="saveBtn">💾 Save</button>
     <button class="btn" id="printBtn">🖨️ Print</button>
+    <button class="btn btn-danger" id="clearBtn">🗑️ Clear</button>
+  </div>
+
+  <div class="footer-hint">
+    <p>🌙 Toggle: Top-right button • 💾 Auto-saved • ⌨️ Ctrl+Enter: Add • Ctrl+S: Save • Ctrl+P: Print</p>
   </div>
 </div>
 
-<script src="dome.js"></script>
+<script src="vote.js"></script>
 </body>
 </html>
