@@ -183,7 +183,7 @@ body {
 
 .info-table,
 #receiptTable {
-  width: 100%;
+  width: 90%;
   border-collapse: collapse;
 }
 
@@ -191,7 +191,7 @@ body {
 #receiptTable th,
 #receiptTable td {
   border: 1px solid var(--border-color);
-  padding: 6px;
+  padding: 3px;
   transition: border-color 0.3s;
 }
 
@@ -207,7 +207,7 @@ body {
 
 .empty-box {
   background: var(--bg-empty);
-  width: 70px;
+  width: 12px;
   transition: background 0.3s;
 }
 
