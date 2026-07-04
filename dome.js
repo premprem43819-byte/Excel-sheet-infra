@@ -6,7 +6,7 @@ const MIN_ROWS = 12;
 const tbody = document.getElementById("tbody");
 const grandTotalEl = document.getElementById("grandTotal");
 const statusDot = document.getElementById("statusDot");
-const statusTxt = document.getElementById("statusTxt");
+const statusTxt = document.getElementById("statusText");
 const printArea = document.getElementById("printArea");
 
 const docDateInput = document.getElementById("docDate");
@@ -378,7 +378,7 @@ document.getElementById("addRowBtn").addEventListener("click", () => {
 
 document.getElementById("clearBtn").addEventListener("click", clearAll);
 
-document.getElementById("prevDayBtn").addEventListener("click", () => {
+document.getElementById("prevDay").addEventListener("click", () => {
   selectedDate.setDate(selectedDate.getDate() - 1);
   updateDateNavigation();
 });
@@ -388,27 +388,27 @@ document.getElementById("todayBtn").addEventListener("click", () => {
   updateDateNavigation();
 });
 
-document.getElementById("nextDayBtn").addEventListener("click", () => {
+document.getElementById("nextDay").addEventListener("click", () => {
   selectedDate.setDate(selectedDate.getDate() + 1);
   updateDateNavigation();
 });
 
-document.getElementById("prevWeekBtn").addEventListener("click", () => {
+document.getElementById("prevWeek").addEventListener("click", () => {
   selectedDate.setDate(selectedDate.getDate() - 7);
   updateDateNavigation();
 });
 
-document.getElementById("nextWeekBtn").addEventListener("click", () => {
+document.getElementById("nextWeek").addEventListener("click", () => {
   selectedDate.setDate(selectedDate.getDate() + 7);
   updateDateNavigation();
 });
 
-document.getElementById("prevMonthBtn").addEventListener("click", () => {
+document.getElementById("prevMonth").addEventListener("click", () => {
   selectedDate.setMonth(selectedDate.getMonth() - 1);
   updateDateNavigation();
 });
 
-document.getElementById("nextMonthBtn").addEventListener("click", () => {
+document.getElementById("nextMonth").addEventListener("click", () => {
   selectedDate.setMonth(selectedDate.getMonth() + 1);
   updateDateNavigation();
 });
@@ -957,7 +957,7 @@ async function shareReceipt() {
 }
 
 document.getElementById("printBtn").addEventListener("click", openPrintPage);
-document.getElementById("saveBtn").addEventListener("click", downloadPDF);
+document.getElementById("pdfBtn").addEventListener("click", downloadPDF);
 document.getElementById("shareBtn").addEventListener("click", shareReceipt);
 
 window.addEventListener("beforeprint", () => {
