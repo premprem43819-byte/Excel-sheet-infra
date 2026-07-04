@@ -466,22 +466,25 @@ body {
   border: 1.2px solid #000;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   background: #fff;
 }
 
 .pp-title {
   text-align: center;
-  padding: 6px 4px 5px;
+  padding: 14px 4px 10px;
   border-bottom: 1.2px solid #000;
+  overflow: visible;
 }
 
 .pp-title h1 {
   margin: 0;
-  font-size: 38px;
-  line-height: 1.05;
+  padding-top: 4px;
+  font-size: 36px;
+  line-height: 1.35;
   font-style: italic;
   font-weight: 950;
+  overflow: visible;
 }
 
 .pp-title .sub {
