@@ -18,12 +18,10 @@
   margin: 0;
   padding: 0;
 }
-
 html {
   font-size: 15px;
   -webkit-text-size-adjust: 100%;
 }
-
 body {
   position: relative;
   min-height: 100vh;
@@ -32,7 +30,6 @@ body {
   color: var(--text);
   overflow-x: hidden;
 }
-
 body::before,
 body::after {
   content: "";
@@ -336,7 +333,6 @@ input:focus {
   border: 1px solid var(--border);
   min-width: 74px;
 }
-
 .date-display b {
   font-size: 11px;
   text-transform: uppercase;
