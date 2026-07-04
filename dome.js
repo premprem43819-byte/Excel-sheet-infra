@@ -17,9 +17,7 @@ const monthText = document.getElementById("monthText");
 let selectedDate = new Date();
 
 function pad(n) {
-  return String(n).padStart(2, "0");
-}
-
+  return String(n).padStart(2, "0");}
 function money(v) {
   return "₹ " + (+v || 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
