@@ -1,114 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Sri Sawdamman Infra</title>
-<link rel="stylesheet" href="domo.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sri Sawdamman Infra</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- PDF libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" title="Toggle Dark/Light">🌙</button>
-<div id="toast" class="toast"></div>
-<div id="confirmModal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-icon">⚠️</div>
-    <h3 id="confirmTitle">Confirm</h3>
-    <p id="confirmText">Are you sure?</p>
-    <div class="modal-btns">
-      <button class="mbtn mbtn-danger" id="confirmYes">Yes</button>
-      <button class="mbtn mbtn-secondary" id="confirmNo">Cancel</button>
+
+  <div id="toast"></div>
+  <div id="printArea"></div>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🏗️</div>
+      <div>
+        <div class="brand-name">Sri Sawdamman Infra</div>
+        <div class="brand-sub">Material Input Receipt</div>
+      </div>
+    </div>
+    <div class="status">
+      <span id="statusDot"></span>
+      <span id="statusText">Ready</span>
     </div>
   </div>
-</div>
-<div id="saveModal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-icon">💾</div>
-    <h3>Save Receipt</h3>
-    <p>Choose how to save your receipt</p>
-    <div class="modal-steps" id="modalSteps"></div>
-    <div class="modal-btns">
-      <button class="mbtn mbtn-primary" id="modalOpenBtn">Open Receipt</button>
-      <button class="mbtn mbtn-secondary" id="modalCloseBtn">Cancel</button>
-    </div>
-  </div>
-</div>
 
-<div class="receipt-container">
-  <div class="title-box">
-    <h1>Sri Sawdamman Infra (INPUT)</h1>
-    <p id="today"></p>
-  </div>
+  <main class="app">
+    <section class="card">
 
-<table class="info-table">
-    <tr>
-      <td class="label">From :</td>
-      <td><input type="text" id="fromField" placeholder="Enter sender name"></td>
-      <td rowspan="4" class="empty-box"></td>
-      <td class="label">Place :</td>
-      <td><input type="text" value="Kendaigoundanur" placeholder="Location"></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td><input type="text" value="Sullerumbu" placeholder="Area"></td>
-    </tr>
-    <tr>
-      <td class="label">To :</td>
-      <td><input type="text" id="toField" placeholder="Enter recipient name"></td>
-      <td></td>
-      <td><input type="text" value="Dindigul" placeholder="City"></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td id="material-label">MATERIAL INPUT</td>
-      <td class="label">Cell No :</td>
-      <td>
-        <input type="text" value="7904689983" placeholder="Primary Phone"><br>
-        <input type="text" value="6369477188" placeholder="Secondary Phone">
-      </td>
-    </tr>
-  </table>
+      <header class="header">
+        <h1>Sri Sawdamman Infra</h1>
+        <p>✦ Material Input Receipt ✦</p>
+      </header>
 
-  <div class="table-scroll">
-    <table id="receiptTable">
-      <thead>
-        <tr>
-          <th>NO</th>
-          <th>Date</th>
-          <th>Material</th>
-          <th>Qty</th>
-          <th>Price</th>
-          <th>Total</th>
-          <th class="del-col">Del</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="4" class="grand-text">Grand Total</td>
-          <td colspan="3" id="grandTotal">₹ 0.00</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+      <section class="info-grid">
+        <div class="left-info">
+          <div class="info-row">
+            <label>From :</label>
+            <input data-key="from" placeholder="Sender / location" />
+          </div>
 
-  <div class="stats-bar">
-    <span>Items: <b id="statItems">0</b></span>
-    <span>Qty: <b id="statQty">0</b></span>
-    <span>Subtotal: <b id="statSubtotal">₹ 0.00</b></span>
-  </div>
+          <div class="info-row">
+            <label>To :</label>
+            <input data-key="to" placeholder="Receiver / location" />
+          </div>
 
-  <div class="buttons">
-    <button class="btn" id="addRowBtn">➕ Add Row</button>
-    <button class="btn" id="shareBtn">📤 Share</button>
-    <button class="btn" id="saveBtn">💾 Save</button>
-    <button class="btn" id="printBtn">🖨️ Print</button>
-    <button class="btn btn-danger" id="clearBtn">🗑️ Clear</button>
-  </div>
-  
-</div>
+          <div class="material-badge">⬖ MATERIAL INPUT ⬗</div>
+        </div>
 
-<script src="dome.js"></script>
+        <div class="right-info">
+          <div class="info-row multi">
+            <label>Place :</label>
+            <div>
+              <input data-key="place1" value="Kendaigoundanur" />
+              <input data-key="place2" value="Sullerumbu" />
+              <input data-key="place3" value="Dindigul, Tamilnadu 624710" />
+            </div>
+          </div>
+
+          <div class="info-row multi">
+            <label>Cell No :</label>
+            <div>
+              <input data-key="cell1" value="7904689983" />
+              <input data-key="cell2" value="6369477188" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="date-nav">
+        <div class="date-main">
+          <label>📅 Date</label>
+          <input id="docDate" data-key="docDate" maxlength="10" inputmode="numeric" placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="date-display">
+          <div><b>Day</b><span id="dayText">-</span></div>
+          <div><b>Week</b><span id="weekText">-</span></div>
+          <div><b>Month</b><span id="monthText">-</span></div>
+        </div>
+
+        <div class="nav-buttons">
+          <button id="prevDay">◀ Day</button>
+          <button id="todayBtn">Today</button>
+          <button id="nextDay">Day ▶</button>
+          <button id="prevWeek">◀ Week</button>
+          <button id="nextWeek">Week ▶</button>
+          <button id="prevMonth">◀ Month</button>
+          <button id="nextMonth">Month ▶</button>
+        </div>
+      </section>
+
+      <section class="meta-grid">
+        <div>
+          <label>📋 Voucher</label>
+          <input data-key="voucherNo" placeholder="e.g. V-001" />
+        </div>
+        <div>
+          <label>🚚 Vehicle</label>
+          <input data-key="vehicleNo" placeholder="TN57 AB1234" />
+        </div>
+        <div>
+          <label>👤 Driver</label>
+          <input data-key="driverName" placeholder="Driver name" />
+        </div>
+      </section>
+
+      <div class="table-wrap">
+        <table id="receiptTable">
+          <thead>
+            <tr>
+              <th>NO</th>
+              <th>Date</th>
+              <th>Material</th>
+              <th>Qty</th>
+              <th>Price ₹</th>
+              <th>Total ₹</th>
+              <th>Del</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="grand-label">Grand Total</td>
+              <td colspan="2" id="grandTotal">₹ 0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <section class="signature-screen">
+        <div>Prepared By</div>
+        <div>Checked By</div>
+        <div>Authorised Signatory</div>
+      </section>
+
+      <section class="actions">
+        <button id="addRowBtn" class="green">＋ Add Row</button>
+        <button id="clearBtn" class="gray">Clear</button>
+        <button id="shareBtn" class="purple">Share</button>
+        <button id="pdfBtn" class="orange">Download PDF</button>
+        <button id="printBtn" class="blue">Print All Printer</button>
+      </section>
+
+    </section>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>
