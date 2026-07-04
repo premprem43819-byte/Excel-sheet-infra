@@ -15,7 +15,6 @@ const weekText = document.getElementById("weekText");
 const monthText = document.getElementById("monthText");
 
 let selectedDate = new Date();
-
 function pad(n) {
   return String(n).padStart(2, "0");}
 function money(v) {
@@ -24,7 +23,6 @@ function money(v) {
     maximumFractionDigits: 2
   });
 }
-
 function esc(v) {
   return String(v ?? "")
     .replace(/&/g, "&amp;")
