@@ -382,6 +382,12 @@ input:focus {
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--border);
 }
+.gtotal-label{text-align:right;font-size:18px;padding:12px 14px!important;color:rgba(150,200,255,0.9);}
+#qtyTotal{text-align:center;font-size:23px;color:#4cff88;white-space:nowrap;padding:0 8px!important;text-shadow:0 0 16px rgba(76,255,136,0.5);font-weight:900;}
+
+/* mobile override */
+.gtotal-label{font-size:21px!important;}
+#qtyTotal{font-size:26px!important;}
 
 .meta-grid > div {
   padding: 10px 14px;
