@@ -248,6 +248,20 @@ function readInfo() {
 
   return info;
 }
+const qtyTotalEl = document.getElementById('qtyTotal');
+
+function qtyText(v) {
+  return (+v || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+
+function updateTotals() {
+  let qtyGrand = 0;
+  [...tbody.rows].forEach(row => {
+    const q = parseFloat(row.querySelector('.rqty').value) || 0;
+    qtyGrand += q;
+  });
+  if (qtyTotalEl) qtyTotalEl.textContent = qtyText(qtyGrand);
+}
 
 function writeInfo(info = {}) {
   document.querySelectorAll("[data-key]").forEach(el => {
