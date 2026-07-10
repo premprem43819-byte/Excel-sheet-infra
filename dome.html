@@ -1,115 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta name="theme-color" content="#0d2060">
+  <meta name="color-scheme" content="dark">
+
   <title>Sri Sawdamman Infra</title>
-  <link rel="stylesheet" href="domo.css" />
+
+  <!-- Main CSS file -->
+  <link rel="stylesheet" href="domo.css">
 
   <!-- PDF libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+  </script>
+
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js">
+  </script>
+
+  <!-- Extra styles required for OCR preview and modal -->
+  <style>
+    /* Correct Today button ID used by JavaScript */
+    #todayDateBtn {
+      background: rgba(36, 194, 107, 0.65) !important;
+      border-color: rgba(36, 194, 107, 0.8) !important;
+    }
+
+    /* Image OCR controls */
+    .ocr-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ocr-tools label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--gold-soft);
+    }
+
+    .ocr-tools select {
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.09);
+      color: #ffffff;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .ocr-tools select option {
+      color: #000000;
+    }
+
+    .ocr-tools button {
+      min-height: 42px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 10px;
+      color: #ffffff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* OCR preview */
+    .ocr-preview-box {
+      display: none;
+      margin: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .ocr-preview-box.show {
+      display: block;
+    }
+
+    .ocr-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ocr-preview-header h2 {
+      font-size: 18px;
+      color: var(--gold-soft);
+    }
+
+    #ocrPreviewInfo {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .ocr-preview-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ocr-preview-actions button {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px;
+      color: #ffffff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .ocr-preview-table {
+      overflow-x: auto;
+    }
+
+    .ocr-preview-table table {
+      width: 100%;
+      min-width: 650px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .ocr-preview-table th,
+    .ocr-preview-table td {
+      border: 1px solid var(--border);
+      padding: 7px;
+      text-align: center;
+    }
+
+    .ocr-preview-table th {
+      background: rgba(255, 255, 255, 0.10);
+      font-size: 13px;
+    }
+
+    .ocr-preview-table input {
+      width: 100%;
+      padding: 7px;
+      border: none;
+      background: transparent;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .ocr-total-cell {
+      color: #4cff88;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    /* Save modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(440px, 100%);
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #101a46;
+      color: #ffffff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    }
+
+    .modal-box h2 {
+      margin-bottom: 8px;
+      color: var(--gold);
+    }
+
+    #modalText {
+      margin-bottom: 14px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+    }
+
+    #modalSteps {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .step-n {
+      display: grid;
+      place-items: center;
+      flex: 0 0 26px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1454d0;
+      font-weight: 900;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      min-height: 44px;
+      padding: 9px;
+      border: none;
+      border-radius: 11px;
+      color: #ffffff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    @media (max-width: 760px) {
+      .ocr-tools {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .ocr-tools select,
+      .ocr-tools button {
+        width: 100%;
+      }
+
+      .ocr-preview-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .ocr-preview-actions button {
+        flex: 1;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <div id="toast"></div>
+  <!-- Notification message -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Print content is generated here by JavaScript -->
   <div id="printArea"></div>
 
-  <div class="topbar">
+  <!-- Hidden values needed for print, share and local storage -->
+  <input
+    type="hidden"
+    id="dayField"
+    data-key="day"
+  >
+
+  <input
+    type="hidden"
+    id="weekField"
+    data-key="week"
+  >
+
+  <input
+    type="hidden"
+    id="monthField"
+    data-key="month"
+  >
+
+  <!-- Top bar -->
+  <header class="topbar">
     <div class="brand">
-      <div class="logo">🏗️</div>
+      <div class="logo" aria-hidden="true">🏗️</div>
+
       <div>
         <div class="brand-name">Sri Sawdamman Infra</div>
         <div class="brand-sub">Material Input Receipt</div>
       </div>
     </div>
+
     <div class="status">
-      <span id="statusDot"></span>
-      <span id="statusText">Ready</span>
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusTxt">Ready</span>
     </div>
-  </div>
+  </header>
 
   <main class="app">
     <section class="card">
 
+      <!-- Receipt heading -->
       <header class="header">
         <h1>Sri Sawdamman Infra</h1>
         <p>✦ Material Input Receipt ✦</p>
       </header>
 
+      <!-- From, To, Place and Phone -->
       <section class="info-grid">
         <div class="left-info">
+
           <div class="info-row">
-            <label>From :</label>
-            <input data-key="from" placeholder="Sender / location" />
+            <label for="fromInput">From :</label>
+
+            <input
+              type="text"
+              id="fromInput"
+              data-key="from"
+              placeholder="Sender / location"
+              autocomplete="off"
+            >
           </div>
 
           <div class="info-row">
-            <label>To :</label>
-            <input data-key="to" placeholder="Receiver / location" />
+            <label for="toInput">To :</label>
+
+            <input
+              type="text"
+              id="toInput"
+              data-key="to"
+              placeholder="Receiver / location"
+              autocomplete="off"
+            >
           </div>
 
-          <div class="material-badge">⬖ MATERIAL INPUT ⬗</div>
+          <div class="material-badge">
+            ⬖ Material Input ⬗
+          </div>
         </div>
 
         <div class="right-info">
+
           <div class="info-row multi">
             <label>Place :</label>
+
             <div>
-              <input data-key="place1" value="Kendaigoundanur" />
-              <input data-key="place2" value="Sullerumbu" />
-              <input data-key="place3" value="Dindigul, Tamilnadu 624710" />
+              <input
+                type="text"
+                data-key="place1"
+                value="Kendaigoundanur"
+                aria-label="Place line 1"
+              >
+
+              <input
+                type="text"
+                data-key="place2"
+                value="Sullerumbu"
+                aria-label="Place line 2"
+              >
+
+              <input
+                type="text"
+                data-key="place3"
+                value="Dindigul, Tamilnadu 624710"
+                aria-label="Place line 3"
+              >
             </div>
           </div>
 
           <div class="info-row multi">
             <label>Cell No :</label>
+
             <div>
-              <input data-key="cell1" value="7904689983" />
-              <input data-key="cell2" value="6369477188" />
+              <input
+                type="tel"
+                data-key="cell1"
+                value="7904689983"
+                inputmode="tel"
+                aria-label="Phone number 1"
+              >
+
+              <input
+                type="tel"
+                data-key="cell2"
+                value="6369477188"
+                inputmode="tel"
+                aria-label="Phone number 2"
+              >
             </div>
           </div>
+
         </div>
       </section>
 
+      <!-- Date navigation -->
       <section class="date-nav">
         <div class="date-main">
-          <label>📅 Date</label>
-          <input id="docDate" data-key="docDate" maxlength="10" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <label for="docDate">📅 Date</label>
+
+          <input
+            type="text"
+            id="docDate"
+            data-key="docDate"
+            maxlength="10"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="DD/MM/YYYY"
+          >
         </div>
 
         <div class="date-display">
-          <div><b>Day</b><span id="dayText">-</span></div>
-          <div><b>Week</b><span id="weekText">-</span></div>
-          <div><b>Month</b><span id="monthText">-</span></div>
+          <div>
+            <span id="dayText">Day: -</span>
+          </div>
+
+          <div>
+            <span id="weekText">Week: -</span>
+          </div>
+
+          <div>
+            <span id="monthText">Month: -</span>
+          </div>
         </div>
 
         <div class="nav-buttons">
-          <button id="prevDay">◀ Day</button>
-          <button id="todayBtn">Today</button>
-          <button id="nextDay">Day ▶</button>
-          <button id="prevWeek">◀ Week</button>
-          <button id="nextWeek">Week ▶</button>
-          <button id="prevMonth">◀ Month</button>
-          <button id="nextMonth">Month ▶</button>
+          <button type="button" id="prevDayBtn">
+            ◀ Day
+          </button>
+
+          <button type="button" id="todayDateBtn">
+            Today
+          </button>
+
+          <button type="button" id="nextDayBtn">
+            Day ▶
+          </button>
+
+          <button type="button" id="prevWeekBtn">
+            ◀ Week
+          </button>
+
+          <button type="button" id="nextWeekBtn">
+            Week ▶
+          </button>
+
+          <button type="button" id="prevMonthBtn">
+            ◀ Month
+          </button>
+
+          <button type="button" id="nextMonthBtn">
+            Month ▶
+          </button>
         </div>
       </section>
 
+      <!-- Voucher, Vehicle and Driver -->
       <section class="meta-grid">
         <div>
-          <label>📋 Voucher</label>
-          <input data-key="voucherNo" placeholder="e.g. V-001" />
+          <label for="voucherNo">📋 Voucher</label>
+
+          <input
+            type="text"
+            id="voucherNo"
+            data-key="voucherNo"
+            placeholder="e.g. V-001"
+            autocomplete="off"
+          >
         </div>
+
         <div>
-          <label>🚚 Vehicle</label>
-          <input data-key="vehicleNo" placeholder="TN57 AB1234" />
+          <label for="vehicleNo">🚚 Vehicle</label>
+
+          <input
+            type="text"
+            id="vehicleNo"
+            data-key="vehicleNo"
+            placeholder="TN57 AB1234"
+            autocomplete="off"
+          >
         </div>
+
         <div>
-          <label>👤 Driver</label>
-          <input data-key="driverName" placeholder="Driver name" />
+          <label for="driverName">👤 Driver</label>
+
+          <input
+            type="text"
+            id="driverName"
+            data-key="driverName"
+            placeholder="Driver name"
+            autocomplete="off"
+          >
         </div>
       </section>
 
+      <!-- Image OCR tools -->
+      <section class="ocr-tools">
+        <label for="ocrLangSelect">
+          📷 Image Language
+        </label>
+
+        <select id="ocrLangSelect">
+          <option value="eng+tam">Tamil + English</option>
+          <option value="eng">English Only</option>
+          <option value="tam">Tamil Only</option>
+        </select>
+
+        <input
+          type="file"
+          id="imageInput"
+          accept="image/*"
+          capture="environment"
+          hidden
+        >
+
+        <button
+          type="button"
+          id="imageBtn"
+          class="blue"
+        >
+          📷 Auto Fill from Image
+        </button>
+      </section>
+
+      <!-- Main receipt table -->
       <div class="table-wrap">
         <table id="receiptTable">
           <thead>
@@ -123,39 +556,186 @@
               <th>Del</th>
             </tr>
           </thead>
+
+          <!-- Rows are generated by JavaScript -->
           <tbody id="tbody"></tbody>
+
           <tfoot>
             <tr>
-              <td colspan="3" class="gtotal-label">📦 Qty Total</td>
-          <td id="qtyTotal">0</td>
-          <td class="gtotal-label">💰 Grand Total</td>
-          <td colspan="2" id="grandTotal">₹ 0.00</td>
-        </tr>
-        <tr class="words-row" style="display:none;">
-          <td colspan="7" class="words-td" id="amountWords"></td>
+              <td
+                colspan="3"
+                class="gtotal-label"
+              >
+                📦 Qty Total
+              </td>
 
+              <td id="qtyTotal">0</td>
+
+              <td class="gtotal-label">
+                💰 Grand Total
+              </td>
+
+              <td
+                colspan="2"
+                id="grandTotal"
+              >
+                ₹ 0.00
+              </td>
+            </tr>
+
+            <tr
+              class="words-row"
+              style="display: none;"
+            >
+              <td
+                colspan="7"
+                class="words-td"
+                id="amountWords"
+              ></td>
             </tr>
           </tfoot>
         </table>
       </div>
 
+      <!-- OCR result preview -->
+      <section
+        id="ocrPreviewBox"
+        class="ocr-preview-box"
+      >
+        <div class="ocr-preview-header">
+          <div>
+            <h2>Image Scan Preview</h2>
+            <p id="ocrPreviewInfo">No rows scanned</p>
+          </div>
+
+          <div class="ocr-preview-actions">
+            <button
+              type="button"
+              id="ocrApplyBtn"
+              class="green"
+            >
+              ✓ Add Preview Rows
+            </button>
+
+            <button
+              type="button"
+              id="ocrClearBtn"
+              class="gray"
+            >
+              Clear Preview
+            </button>
+          </div>
+        </div>
+
+        <div class="ocr-preview-table">
+          <table>
+            <thead>
+              <tr>
+                <th>NO</th>
+                <th>Date</th>
+                <th>Material</th>
+                <th>Qty</th>
+                <th>Price ₹</th>
+                <th>Total ₹</th>
+              </tr>
+            </thead>
+
+            <tbody id="ocrPreviewBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Signatures -->
       <section class="signature-screen">
         <div>Prepared By</div>
         <div>Checked By</div>
         <div>Authorised Signatory</div>
       </section>
 
+      <!-- Main action buttons -->
       <section class="actions">
-        <button id="addRowBtn" class="green">＋ Add Row</button>
-        <button id="clearBtn" class="gray">Clear</button>
-        <button id="shareBtn" class="purple">Share</button>
-        <button id="pdfBtn" class="orange">Download PDF</button>
-        <button id="printBtn" class="blue">Print All Printer</button>
+        <button
+          type="button"
+          id="addRowBtn"
+          class="green"
+        >
+          ＋ Add Row
+        </button>
+
+        <button
+          type="button"
+          id="clearBtn"
+          class="gray"
+        >
+          Clear
+        </button>
+
+        <button
+          type="button"
+          id="shareBtn"
+          class="purple"
+        >
+          Share
+        </button>
+
+        <button
+          type="button"
+          id="saveBtn"
+          class="orange"
+        >
+          Download PDF
+        </button>
+
+        <button
+          type="button"
+          id="printBtn"
+          class="blue"
+        >
+          Print All Printer
+        </button>
       </section>
 
     </section>
   </main>
 
+  <!-- iPhone/iPad save instructions modal -->
+  <div
+    id="saveModal"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="saveModalTitle"
+  >
+    <div class="modal-box">
+      <h2 id="saveModalTitle">
+        Save Receipt
+      </h2>
+
+      <p id="modalText"></p>
+
+      <div id="modalSteps"></div>
+
+      <div class="modal-buttons">
+        <button
+          type="button"
+          id="modalOpenBtn"
+          class="blue"
+        >
+          Open Receipt
+        </button>
+
+        <button
+          type="button"
+          id="modalCloseBtn"
+          class="gray"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript file -->
   <script src="dome.js"></script>
 </body>
 </html>
